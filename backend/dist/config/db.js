@@ -1,7 +1,7 @@
+"use strict";
 // // src/config/db.ts
 // import mongoose from 'mongoose';
 // import { env } from './env';
-
 // export const connectDB = async () => {
 //   try {
 //     await mongoose.connect(env.DB_URL);
@@ -11,13 +11,8 @@
 //     process.exit(1);
 //   }
 // };
-
-
-
-
 // import mongoose from 'mongoose';
 // import { env } from './env';
-
 // export const connectDB = async () => {
 //   try {
 //     await mongoose.connect(env.MONGO_URI);

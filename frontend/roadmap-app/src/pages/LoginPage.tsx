@@ -31,7 +31,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
       <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-lg">
-        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">Welcome Back</h2>
+        <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">Login </h2>
 
         {error && (
           <div className="bg-red-100 text-red-700 border border-red-300 p-3 mb-4 rounded">
