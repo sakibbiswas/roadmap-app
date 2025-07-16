@@ -9,7 +9,8 @@ app.listen(PORT, () => {
 
 
 
-// import app from "./app";
+// import app from "./app"; // ঠিক path
 // import serverless from "serverless-http";
 
-// export const handler = serverless(app);
+
+// export const handler = serverless(app); // ✅ Vercel use korbe eta

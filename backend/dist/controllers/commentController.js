@@ -1,21 +1,37 @@
-import Comment from "../models/Comment";
-import { isValidObjectId } from "../validateObjectId";
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.deleteComment = exports.updateComment = exports.addComment = exports.getComments = void 0;
+const Comment_1 = __importDefault(require("../models/Comment"));
+const validateObjectId_1 = require("../validateObjectId");
 // import { isValidObjectId } from "../utils/validateObjectId";
-export const getComments = async (req, res) => {
+const getComments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { roadmapId } = req.query;
     if (!roadmapId || typeof roadmapId !== "string")
         return res.status(400).json({ error: "roadmapId query param is required" });
-    if (!isValidObjectId(roadmapId))
+    if (!(0, validateObjectId_1.isValidObjectId)(roadmapId))
         return res.status(400).json({ error: "Invalid roadmapId" });
     try {
-        const comments = await Comment.find({ roadmapId }).sort({ createdAt: -1 });
+        const comments = yield Comment_1.default.find({ roadmapId }).sort({ createdAt: -1 });
         res.json(comments);
     }
     catch (error) {
         res.status(500).json({ error: "Failed to fetch comments" });
     }
-};
-export const addComment = async (req, res) => {
+});
+exports.getComments = getComments;
+const addComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { roadmapId, parentCommentId, content } = req.body;
     const userEmail = req.userEmail;
     if (!userEmail)
@@ -24,25 +40,26 @@ export const addComment = async (req, res) => {
         return res.status(400).json({ error: "roadmapId and content are required" });
     if (content.length > 300)
         return res.status(400).json({ error: "Content exceeds 300 characters" });
-    if (!isValidObjectId(roadmapId))
+    if (!(0, validateObjectId_1.isValidObjectId)(roadmapId))
         return res.status(400).json({ error: "Invalid roadmapId" });
-    if (parentCommentId && !isValidObjectId(parentCommentId))
+    if (parentCommentId && !(0, validateObjectId_1.isValidObjectId)(parentCommentId))
         return res.status(400).json({ error: "Invalid parentCommentId" });
     try {
-        const newComment = new Comment({
+        const newComment = new Comment_1.default({
             roadmapId,
             parentCommentId,
             userEmail,
             content,
         });
-        await newComment.save();
+        yield newComment.save();
         res.status(201).json(newComment);
     }
     catch (error) {
         res.status(500).json({ error: "Failed to add comment" });
     }
-};
-export const updateComment = async (req, res) => {
+});
+exports.addComment = addComment;
+const updateComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const commentId = req.params.id;
     const { content } = req.body;
     const userEmail = req.userEmail;
@@ -50,47 +67,49 @@ export const updateComment = async (req, res) => {
         return res.status(401).json({ error: "Unauthorized" });
     if (!content || content.length > 300)
         return res.status(400).json({ error: "Invalid content" });
-    if (!isValidObjectId(commentId))
+    if (!(0, validateObjectId_1.isValidObjectId)(commentId))
         return res.status(400).json({ error: "Invalid comment ID" });
     try {
-        const comment = await Comment.findById(commentId);
+        const comment = yield Comment_1.default.findById(commentId);
         if (!comment)
             return res.status(404).json({ error: "Comment not found" });
         if (comment.userEmail !== userEmail)
             return res.status(403).json({ error: "Forbidden" });
         comment.content = content;
-        await comment.save();
+        yield comment.save();
         res.json(comment);
     }
     catch (error) {
         res.status(500).json({ error: "Failed to update comment" });
     }
-};
-export const deleteComment = async (req, res) => {
+});
+exports.updateComment = updateComment;
+const deleteComment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const commentId = req.params.id;
     const userEmail = req.userEmail;
     if (!userEmail)
         return res.status(401).json({ error: "Unauthorized" });
-    if (!isValidObjectId(commentId))
+    if (!(0, validateObjectId_1.isValidObjectId)(commentId))
         return res.status(400).json({ error: "Invalid comment ID" });
     try {
-        const comment = await Comment.findById(commentId);
+        const comment = yield Comment_1.default.findById(commentId);
         if (!comment)
             return res.status(404).json({ error: "Comment not found" });
         if (comment.userEmail !== userEmail)
             return res.status(403).json({ error: "Forbidden" });
         // ✅ FIXED: Delete comment and nested replies with proper type
-        const deleteRecursive = async (id) => {
-            const replies = await Comment.find({ parentCommentId: id });
+        const deleteRecursive = (id) => __awaiter(void 0, void 0, void 0, function* () {
+            const replies = yield Comment_1.default.find({ parentCommentId: id });
             for (const reply of replies) {
-                await deleteRecursive(reply._id.toString());
+                yield deleteRecursive(reply._id.toString());
             }
-            await Comment.findByIdAndDelete(id);
-        };
-        await deleteRecursive(commentId);
+            yield Comment_1.default.findByIdAndDelete(id);
+        });
+        yield deleteRecursive(commentId);
         res.json({ message: "Comment deleted" });
     }
     catch (error) {
         res.status(500).json({ error: "Failed to delete comment" });
     }
-};
+});
+exports.deleteComment = deleteComment;

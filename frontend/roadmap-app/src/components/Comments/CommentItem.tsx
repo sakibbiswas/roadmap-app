@@ -11,13 +11,13 @@ interface Props {
   maxDepth: number;
 }
 
-const CommentItem = ({
+const CommentItem: React.FC<Props> = ({
   comment,
   depth,
   allComments,
   setComments,
   maxDepth,
-}: Props) => {
+}) => {
   const { token, email } = useAuth();
   const [showReply, setShowReply] = useState(false);
   const [replyContent, setReplyContent] = useState("");
@@ -29,14 +29,14 @@ const CommentItem = ({
   const isOwner = email === comment.userEmail;
 
   const handleAddReply = async () => {
-    if (!token) return setError("You must be logged in to reply.");
-    if (!replyContent.trim()) return setError("Reply cannot be empty.");
-    if (replyContent.length > 300) return setError("Reply must be under 300 characters.");
+    if (!token) return setError("🔒 Please login to reply.");
+    if (!replyContent.trim()) return setError("⚠️ Reply cannot be empty.");
+    if (replyContent.length > 300) return setError("⚠️ Max 300 characters.");
 
     setError(null);
     setLoading(true);
 
-    const tempId = `temp-reply-${Date.now()}`;
+    const tempId = `temp-${Date.now()}`;
     const newReply: CommentType = {
       _id: tempId,
       roadmapId: comment.roadmapId,
@@ -47,21 +47,24 @@ const CommentItem = ({
       updatedAt: new Date().toISOString(),
     };
 
+    // Optimistic UI update - add reply immediately
     setComments((prev) => [newReply, ...prev]);
     setReplyContent("");
     setShowReply(false);
 
     try {
-      const res = await api.post<CommentType>("/comments", {
+      const { data } = await api.post<CommentType>("/comments", {
         roadmapId: comment.roadmapId,
         parentCommentId: comment._id,
         content: replyContent,
       });
+      // Replace temp reply with real data from server
       setComments((prev) =>
-        prev.map((c) => (c._id === tempId ? res.data : c))
+        prev.map((c) => (c._id === tempId ? data : c))
       );
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to add reply");
+      setError(err.response?.data?.error || "❌ Failed to add reply.");
+      // Remove temp reply on error
       setComments((prev) => prev.filter((c) => c._id !== tempId));
     } finally {
       setLoading(false);
@@ -69,104 +72,111 @@ const CommentItem = ({
   };
 
   const handleDelete = async () => {
-    if (!token) return setError("You must be logged in to delete comments.");
+    if (!token) return setError("🔒 Login required to delete.");
 
     setLoading(true);
     setError(null);
 
+    // Collect all comment IDs to remove (comment + all nested replies)
     const idsToRemove = new Set<string>();
-    const collectIds = (cId: string) => {
-      idsToRemove.add(cId);
+    const collectIds = (id: string) => {
+      idsToRemove.add(id);
       allComments.forEach((c) => {
-        if (c.parentCommentId === cId) collectIds(c._id);
+        if (c.parentCommentId === id) collectIds(c._id);
       });
     };
     collectIds(comment._id);
 
     const oldComments = [...allComments];
+    // Remove all affected comments from UI immediately
     setComments((prev) => prev.filter((c) => !idsToRemove.has(c._id)));
 
     try {
       await api.delete(`/comments/${comment._id}`);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to delete comment");
-      setComments(oldComments); // revert
+      setError(err.response?.data?.error || "❌ Delete failed.");
+      // Revert UI on failure
+      setComments(oldComments);
     } finally {
       setLoading(false);
     }
   };
 
   const handleEdit = async () => {
-    if (!token) return setError("You must be logged in to edit comments.");
-    if (!editContent.trim()) return setError("Comment content cannot be empty.");
-    if (editContent.length > 300) return setError("Comment must be under 300 characters.");
+    if (!token) return setError("🔒 Login required to edit.");
+    if (!editContent.trim()) return setError("⚠️ Content is empty.");
+    if (editContent.length > 300)
+      return setError("⚠️ Max 300 characters allowed.");
 
-    setError(null);
     setLoading(true);
+    setError(null);
 
     const oldContent = comment.content;
+    // Optimistically update UI
     setComments((prev) =>
-      prev.map((c) => (c._id === comment._id ? { ...c, content: editContent } : c))
+      prev.map((c) =>
+        c._id === comment._id ? { ...c, content: editContent } : c
+      )
     );
 
     try {
       await api.put(`/comments/${comment._id}`, { content: editContent });
       setEditing(false);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to update comment");
+      setError(err.response?.data?.error || "❌ Update failed.");
+      // Revert UI if update failed
       setComments((prev) =>
-        prev.map((c) => (c._id === comment._id ? { ...c, content: oldContent } : c))
+        prev.map((c) =>
+          c._id === comment._id ? { ...c, content: oldContent } : c
+        )
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // Safe fallback for replies
+  const replies = comment.replies ?? [];
+
   return (
     <div
-      className="bg-white border border-gray-300 rounded-lg p-4 my-3 shadow-sm"
+      className="border rounded p-3 my-2 bg-white shadow-sm"
       style={{ marginLeft: depth * 20 }}
     >
-      <div className="flex justify-between items-center mb-2">
-        <span className="font-semibold text-blue-700 text-sm">
-          {comment.userEmail}
-        </span>
-        <span className="text-xs text-gray-500">
+      <div className="flex justify-between items-center mb-1 text-sm">
+        <span className="font-medium">{comment.userEmail}</span>
+        <span className="text-gray-500">
           {new Date(comment.createdAt).toLocaleString()}
         </span>
       </div>
 
-      {error && (
-        <div className="bg-red-100 border border-red-300 text-red-700 px-2 py-1 rounded mb-2 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <p className="text-red-500 text-sm mb-1">{error}</p>}
 
       {editing ? (
         <>
           <textarea
-            className="w-full border border-gray-300 rounded p-2 mb-2"
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
             maxLength={300}
             rows={3}
+            className="w-full border p-2 rounded"
             disabled={loading}
           />
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-1">
             <button
-              className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 disabled:opacity-50"
               onClick={handleEdit}
               disabled={loading}
+              className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 disabled:opacity-50"
             >
-              Save
+              {loading ? "Saving..." : "Save"}
             </button>
             <button
-              className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500"
               onClick={() => {
                 setEditing(false);
                 setEditContent(comment.content);
                 setError(null);
               }}
+              className="bg-gray-400 text-black px-3 py-1 rounded hover:bg-gray-500"
               disabled={loading}
             >
               Cancel
@@ -174,19 +184,19 @@ const CommentItem = ({
           </div>
         </>
       ) : (
-        <p className="text-gray-800 whitespace-pre-wrap">{comment.content}</p>
+        <p className="whitespace-pre-wrap">{comment.content}</p>
       )}
 
-      <div className="flex gap-3 mt-2 text-sm text-blue-600">
+      <div className="flex gap-4 text-sm mt-2">
         {depth < maxDepth - 1 && token && (
           <button
             onClick={() => {
-              setShowReply((show) => !show);
+              setShowReply(!showReply);
               setError(null);
             }}
-            className="hover:underline"
+            className="text-blue-600 hover:underline"
           >
-            {showReply ? "Cancel Reply" : "Reply"}
+            {showReply ? "Cancel" : "Reply"}
           </button>
         )}
 
@@ -197,15 +207,16 @@ const CommentItem = ({
                 setEditing(true);
                 setError(null);
               }}
-              className="hover:underline"
+              className="text-yellow-600 hover:underline"
             >
               Edit
             </button>
             <button
               onClick={handleDelete}
-              className="hover:underline text-red-600"
+              className="text-red-600 hover:underline"
+              disabled={loading}
             >
-              Delete
+              {loading ? "Deleting..." : "Delete"}
             </button>
           </>
         )}
@@ -219,23 +230,22 @@ const CommentItem = ({
             value={replyContent}
             onChange={(e) => setReplyContent(e.target.value)}
             placeholder="Write your reply..."
-            className="w-full border border-blue-300 rounded p-2 text-sm"
+            className="w-full border p-2 rounded"
             disabled={loading}
           />
           <button
             onClick={handleAddReply}
             disabled={loading}
-            className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded disabled:opacity-50"
+            className="mt-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? "Replying..." : "Reply"}
           </button>
         </div>
       )}
 
-      {/* Nested Replies */}
-      {comment.replies && comment.replies.length > 0 && (
-        <div className="mt-3 space-y-2">
-          {comment.replies.map((reply) => (
+      {replies.length > 0 && (
+        <div className="mt-2">
+          {replies.map((reply) => (
             <CommentItem
               key={reply._id}
               comment={reply}

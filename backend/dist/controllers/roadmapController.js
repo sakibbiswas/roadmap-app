@@ -1,11 +1,26 @@
+"use strict";
 // // controllers/roadmapController.ts
 // import { Request, Response } from "express";
 // import RoadmapItem from "../models/RoadmapItem";
 // import { isValidObjectId } from "../validateObjectId";
-import RoadmapItem from "../models/RoadmapItem";
-import { isValidObjectId } from "../validateObjectId";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.downvoteRoadmap = exports.upvoteRoadmap = exports.getRoadmaps = void 0;
+const RoadmapItem_1 = __importDefault(require("../models/RoadmapItem"));
+const validateObjectId_1 = require("../validateObjectId");
 // GET all roadmaps with filters and sorting
-export const getRoadmaps = async (req, res) => {
+const getRoadmaps = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { category, status, sortBy } = req.query;
     const filter = {};
     if (category)
@@ -22,23 +37,24 @@ export const getRoadmaps = async (req, res) => {
     else
         sort = { createdAt: -1 };
     try {
-        const roadmaps = await RoadmapItem.find(filter).sort(sort);
+        const roadmaps = yield RoadmapItem_1.default.find(filter).sort(sort);
         res.json(roadmaps);
     }
     catch (error) {
         res.status(500).json({ error: "Failed to fetch roadmap items" });
     }
-};
+});
+exports.getRoadmaps = getRoadmaps;
 // PATCH /roadmaps/:id/upvote
-export const upvoteRoadmap = async (req, res) => {
+const upvoteRoadmap = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const roadmapId = req.params.id;
     const userEmail = req.userEmail;
     if (!userEmail)
         return res.status(401).json({ error: "Unauthorized" });
-    if (!isValidObjectId(roadmapId))
+    if (!(0, validateObjectId_1.isValidObjectId)(roadmapId))
         return res.status(400).json({ error: "Invalid roadmap ID" });
     try {
-        const roadmap = await RoadmapItem.findById(roadmapId);
+        const roadmap = yield RoadmapItem_1.default.findById(roadmapId);
         if (!roadmap)
             return res.status(404).json({ error: "Roadmap item not found" });
         roadmap.upvotedBy = roadmap.upvotedBy || [];
@@ -54,24 +70,25 @@ export const upvoteRoadmap = async (req, res) => {
         }
         roadmap.upvotes = roadmap.upvotedBy.length;
         roadmap.downvotes = roadmap.downvotedBy.length;
-        await roadmap.save();
+        yield roadmap.save();
         res.json(roadmap);
     }
     catch (error) {
         console.error("Upvote error:", error);
         res.status(500).json({ error: "Failed to upvote roadmap item" });
     }
-};
+});
+exports.upvoteRoadmap = upvoteRoadmap;
 // PATCH /roadmaps/:id/downvote
-export const downvoteRoadmap = async (req, res) => {
+const downvoteRoadmap = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const roadmapId = req.params.id;
     const userEmail = req.userEmail;
     if (!userEmail)
         return res.status(401).json({ error: "Unauthorized" });
-    if (!isValidObjectId(roadmapId))
+    if (!(0, validateObjectId_1.isValidObjectId)(roadmapId))
         return res.status(400).json({ error: "Invalid roadmap ID" });
     try {
-        const roadmap = await RoadmapItem.findById(roadmapId);
+        const roadmap = yield RoadmapItem_1.default.findById(roadmapId);
         if (!roadmap)
             return res.status(404).json({ error: "Roadmap item not found" });
         roadmap.upvotedBy = roadmap.upvotedBy || [];
@@ -87,11 +104,12 @@ export const downvoteRoadmap = async (req, res) => {
         }
         roadmap.upvotes = roadmap.upvotedBy.length;
         roadmap.downvotes = roadmap.downvotedBy.length;
-        await roadmap.save();
+        yield roadmap.save();
         res.json(roadmap);
     }
     catch (error) {
         console.error("Downvote error:", error);
         res.status(500).json({ error: "Failed to downvote roadmap item" });
     }
-};
+});
+exports.downvoteRoadmap = downvoteRoadmap;

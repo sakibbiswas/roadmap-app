@@ -1,12 +1,14 @@
-import { Schema, model } from "mongoose";
-const CommentSchema = new Schema({
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = require("mongoose");
+const CommentSchema = new mongoose_1.Schema({
     roadmapId: {
-        type: Schema.Types.ObjectId,
+        type: mongoose_1.Schema.Types.ObjectId,
         ref: "RoadmapItem",
         required: true,
     },
     parentCommentId: {
-        type: Schema.Types.ObjectId,
+        type: mongoose_1.Schema.Types.ObjectId,
         ref: "Comment",
     },
     userEmail: {
@@ -21,4 +23,4 @@ const CommentSchema = new Schema({
 }, {
     timestamps: true,
 });
-export default model("Comment", CommentSchema);
+exports.default = (0, mongoose_1.model)("Comment", CommentSchema);

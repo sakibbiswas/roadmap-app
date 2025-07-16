@@ -27,6 +27,7 @@ const CommentsList = ({ roadmapId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState("");
 
+  // Fetch comments for roadmap
   const fetchComments = async () => {
     setLoading(true);
     setError(null);
@@ -44,6 +45,7 @@ const CommentsList = ({ roadmapId }: Props) => {
     fetchComments();
   }, [roadmapId]);
 
+  // Add new comment (top level)
   const handleAddComment = async () => {
     if (!token || !email) {
       setError("You must be logged in to comment.");
@@ -60,6 +62,7 @@ const CommentsList = ({ roadmapId }: Props) => {
 
     setError(null);
 
+    // Optimistic UI update
     const tempId = `temp-${Date.now()}`;
     const newCommentObj: CommentType = {
       _id: tempId,
@@ -77,20 +80,23 @@ const CommentsList = ({ roadmapId }: Props) => {
         roadmapId,
         content: newComment,
       });
+      // Replace temp comment with server comment
       setComments((prev) =>
         prev.map((c) => (c._id === tempId ? res.data : c))
       );
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to add comment");
+      // Remove temp comment on error
       setComments((prev) => prev.filter((c) => c._id !== tempId));
     }
   };
 
+  // Build nested comment tree helper
   const buildTree = (
     flatComments: CommentType[],
     parentId: string | undefined = undefined,
     depth: number = 0
-  ): CommentWithReplies[] => {
+  ): CommentType[] => {
     if (depth >= MAX_NEST_DEPTH) return [];
     return flatComments
       .filter((c) => c.parentCommentId === parentId)
@@ -100,6 +106,7 @@ const CommentsList = ({ roadmapId }: Props) => {
       }));
   };
 
+  // Flattened comments do not have replies property, add via typing
   interface CommentWithReplies extends CommentType {
     replies?: CommentWithReplies[];
   }
@@ -107,30 +114,26 @@ const CommentsList = ({ roadmapId }: Props) => {
   const nestedComments: CommentWithReplies[] = buildTree(comments);
 
   return (
-    <div className="mt-6 bg-white rounded-lg p-5 shadow-sm border border-gray-200">
-      <h3 className="text-lg font-semibold text-blue-700 mb-4">💬 Comments</h3>
+    <div className="mt-4">
+      <h3 className="font-semibold mb-2">Comments</h3>
 
-      {error && (
-        <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded mb-3 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <p className="text-red-600 mb-2">{error}</p>}
 
       {token && (
-        <div className="mb-5">
+        <div className="mb-4">
           <textarea
-            className="w-full border border-blue-300 rounded p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border rounded p-2"
             rows={3}
-            placeholder="Write a comment..."
+            placeholder="Add a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             maxLength={MAX_COMMENT_LENGTH}
           />
-          <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
+          <div className="flex justify-between mt-1 text-sm text-gray-500">
             <span>{newComment.length} / {MAX_COMMENT_LENGTH}</span>
             <button
               onClick={handleAddComment}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded shadow disabled:opacity-50"
+              className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
             >
               Add Comment
             </button>
@@ -138,12 +141,10 @@ const CommentsList = ({ roadmapId }: Props) => {
         </div>
       )}
 
-      {loading && <p className="text-sm text-gray-600">Loading comments...</p>}
-      {!loading && nestedComments.length === 0 && (
-        <p className="text-sm text-gray-500">No comments yet. Be the first!</p>
-      )}
+      {loading && <p>Loading comments...</p>}
+      {!loading && nestedComments.length === 0 && <p>No comments yet.</p>}
 
-      <div className="mt-4 space-y-4">
+      <div>
         {nestedComments.map((comment) => (
           <CommentItem
             key={comment._id}

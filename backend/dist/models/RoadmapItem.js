@@ -1,4 +1,9 @@
+"use strict";
 // import mongoose from "mongoose";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 // const roadmapItemSchema = new mongoose.Schema({
 //   title: { type: String, required: true },
 //   description: String,
@@ -11,8 +16,8 @@
 // });
 // const RoadmapItem = mongoose.model("RoadmapItem", roadmapItemSchema);
 // export default RoadmapItem;
-import mongoose from "mongoose";
-const roadmapItemSchema = new mongoose.Schema({
+const mongoose_1 = __importDefault(require("mongoose"));
+const roadmapItemSchema = new mongoose_1.default.Schema({
     title: { type: String, required: true },
     description: String,
     category: { type: String, required: true },
@@ -24,5 +29,5 @@ const roadmapItemSchema = new mongoose.Schema({
     upvotedBy: { type: [String], default: [] },
     downvotedBy: { type: [String], default: [] },
 });
-const RoadmapItem = mongoose.model("RoadmapItem", roadmapItemSchema);
-export default RoadmapItem;
+const RoadmapItem = mongoose_1.default.model("RoadmapItem", roadmapItemSchema);
+exports.default = RoadmapItem;
