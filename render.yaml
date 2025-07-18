@@ -2,11 +2,12 @@ services:
   - type: web
     name: roadmap-backend
     env: node
-    rootDir: backend          # <-- এখানে backend ফোল্ডার দিন
+    rootDir: backend
     buildCommand: npm install && npm run build
     startCommand: npm start
     plan: starter
     autoDeploy: true
+    packageManager: npm
     envVars:
       - key: PORT
         value: 10000
@@ -14,7 +15,7 @@ services:
   - type: static
     name: roadmap-frontend
     env: static
-    rootDir: frontend/roadmap-app    # <-- এখানে ফ্রন্টেন্ডের সঠিক ফোল্ডার দিন
+    rootDir: frontend/roadmap-app
     buildCommand: npm install && npm run build
     publishDir: dist
     plan: starter
