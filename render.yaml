@@ -5,9 +5,7 @@ services:
     rootDir: backend
     buildCommand: npm install && npm run build
     startCommand: npm start
-    plan: starter
     autoDeploy: true
-    packageManager: npm
     envVars:
       - key: PORT
         value: 10000
@@ -18,5 +16,4 @@ services:
     rootDir: frontend/roadmap-app
     buildCommand: npm install && npm run build
     publishDir: dist
-    plan: starter
     autoDeploy: true
