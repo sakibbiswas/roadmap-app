@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: roadmap-app
+    env: node
+    buildCommand: |
+      cd frontend/roadmap-app && npm install && npm run build
+      cd ../../backend && npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: MONGODB_URI
+        value: your_mongo_db_connection_string
+      - key: JWT_SECRET
+        value: your_jwt_secret_here
+    buildFilter:
+      paths:
+        - frontend/roadmap-app/**
+        - backend/**

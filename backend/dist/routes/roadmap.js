@@ -1,16 +1,5 @@
 "use strict";
-// import { Router } from "express";
-// import {
-//   getRoadmaps,
-//   upvoteRoadmap,
-// } from "../controllers/roadmapController";
-// import { authenticateToken } from "../middlewares/authMiddleware";
-// // import { authenticateToken } from "../middleware/authMiddleware";
 Object.defineProperty(exports, "__esModule", { value: true });
-// const router = Router();
-// router.get("/", getRoadmaps);
-// router.patch("/:id/upvote", authenticateToken, upvoteRoadmap);
-// export default router;
 const express_1 = require("express");
 const roadmapController_1 = require("../controllers/roadmapController");
 const authMiddleware_1 = require("../middlewares/authMiddleware");
