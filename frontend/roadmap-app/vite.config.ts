@@ -3,12 +3,12 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  base: "/", // ✅ must be "/" for Vercel
+  
   plugins: [react(), tailwindcss()],
   build: {
     outDir: "dist",
   },
-  
+  base: "/", // ✅ must be "/" for Vercel
 });
 
 // import { defineConfig } from "vite";
