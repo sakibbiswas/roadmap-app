@@ -1,27 +1,28 @@
 services:
   - type: web
-    name: roadmap-backend
+    name: roadmap-app-backend
     env: node
-    rootDir: backend
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    plan: starter
-    autoDeploy: true
+    plan: free
+    region: oregon
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm run start
+    rootDirectory: backend
     envVars:
-      - key: PORT
-        value: 10000
-      - key: MONGODB_URI
-        value: your-mongodb-uri
-      - key: JWT_SECRET
-        value: your-secret-key
-      - key: CLIENT_URL
-        value: https://roadmap-frontend.onrender.com
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.15.0
 
-  - type: static
-    name: roadmap-frontend
+  - type: web
+    name: roadmap-app-frontend
     env: static
-    rootDir: frontend/roadmap-app
-    buildCommand: npm install && npm run build
-    publishDir: dist
-    plan: starter
-    autoDeploy: true
+    plan: free
+    region: oregon
+    buildCommand: cd frontend/roadmap-app && npm install && npm run build
+    staticPublishPath: frontend/roadmap-app/dist
+    rootDirectory: frontend/roadmap-app
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.15.0
